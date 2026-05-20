@@ -1,0 +1,15 @@
+node_modules/
+.env
+.env.local
+.DS_Store
+*.log
+npm-debug.log*
+.vscode/
+.idea/
+
+# 原本Word（リポジトリに含めない）
+aibunpou.doc
+aibunpou.html
+aibunpou.files/
+aibunpou_export.txt
+aibunpou_utf8.txt

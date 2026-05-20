@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: ai-harada-kun
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: POE_API_KEY
+        sync: false
+      - key: POE_BOT
+        value: Claude-Sonnet-4.5

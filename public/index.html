@@ -1,0 +1,1427 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>AIはらだくん × 文法制覇</title>
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%2300e5ff'/><circle cx='24' cy='28' r='4' fill='%23111'/><circle cx='40' cy='28' r='4' fill='%23111'/><path d='M22 42 Q32 50 42 42' stroke='%23111' stroke-width='3' fill='none' stroke-linecap='round'/></svg>" />
+<style>
+  :root{
+    --bg-0:#0b0f1a;
+    --bg-1:#121933;
+    --bg-2:#1a2348;
+    --neon-cyan:#00e5ff;
+    --neon-pink:#ff5cc8;
+    --neon-violet:#8a5cff;
+    --neon-yellow:#ffe16a;
+    --text:#eaf2ff;
+    --text-dim:#9fb0d6;
+    --ok:#4ade80;
+    --ng:#ff6b6b;
+    --card:#0f1733cc;
+    --line:#27325a;
+    --shadow:0 10px 30px #00e5ff22, 0 2px 8px #ff5cc822;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic UI","Segoe UI",system-ui,sans-serif;
+    color:var(--text);
+    background:
+      radial-gradient(1200px 600px at 10% -10%, #1a2a6c44, transparent 60%),
+      radial-gradient(900px 500px at 110% 10%, #ff5cc833, transparent 60%),
+      radial-gradient(800px 600px at 50% 120%, #00e5ff33, transparent 60%),
+      linear-gradient(180deg,var(--bg-0),var(--bg-1) 60%, #0a0f25);
+    min-height:100%;
+    overflow-x:hidden;
+  }
+  /* グリッド背景 */
+  body::before{
+    content:"";
+    position:fixed;inset:0;
+    background-image:
+      linear-gradient(transparent 95%, #00e5ff22 96%),
+      linear-gradient(90deg, transparent 95%, #ff5cc822 96%);
+    background-size: 38px 38px, 38px 38px;
+    pointer-events:none;
+    mask-image: radial-gradient(ellipse at center, #000 40%, transparent 80%);
+    opacity:.6;
+    z-index:0;
+  }
+  .app{
+    position:relative; z-index:1;
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 18px 16px 120px;
+  }
+
+  /* ヘッダー */
+  .header{
+    display:flex; align-items:center; gap:14px;
+    padding:14px 16px;
+    border:1px solid var(--line);
+    border-radius:18px;
+    background: linear-gradient(135deg,#0e1633cc,#1a1f4acc);
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow);
+    position:sticky; top:10px; z-index:10;
+  }
+  .title{
+    font-weight:900; letter-spacing:.04em;
+    background: linear-gradient(90deg,var(--neon-cyan),var(--neon-pink),var(--neon-yellow));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    font-size: clamp(18px, 3.4vw, 24px);
+    line-height:1.1;
+  }
+  .subtitle{ font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .tabs{ margin-left:auto; display:flex; gap:6px; }
+  .tab{
+    appearance:none; border:1px solid var(--line); background:#0e1430;
+    color:var(--text); padding:8px 12px; border-radius:999px; cursor:pointer;
+    font-weight:700; font-size:13px;
+    transition: all .2s ease;
+  }
+  .tab:hover{ transform: translateY(-1px); box-shadow:0 6px 16px #00e5ff22;}
+  .tab.active{
+    background: linear-gradient(135deg,var(--neon-cyan),var(--neon-violet));
+    color:#0a0f25; border-color: transparent;
+    box-shadow: 0 0 0 2px #00e5ff44, 0 6px 24px #8a5cff55;
+  }
+
+  /* ロボットステージ */
+  .stage{
+    margin-top:18px;
+    display:grid; grid-template-columns: 220px 1fr; gap:18px;
+    align-items:stretch;
+  }
+  @media (max-width:680px){ .stage{ grid-template-columns: 1fr; }}
+  .robot-card{
+    border:1px solid var(--line); border-radius:20px;
+    background: radial-gradient(circle at 30% 20%, #1a2a6c66, transparent 60%), #0d1430cc;
+    padding:14px; box-shadow: var(--shadow);
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    position:relative; overflow:hidden;
+  }
+  .robot-card::after{
+    content:""; position:absolute; inset:auto -20% -40% -20%; height:60%;
+    background: radial-gradient(closest-side, #00e5ff44, transparent 70%);
+    filter: blur(20px);
+  }
+  .robot{
+    width:170px; height:170px; position:relative; z-index:1;
+    animation: float 3.6s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  .robot svg{ width:100%; height:100%; filter: drop-shadow(0 8px 18px #00e5ff66);}
+  .robot.talk .mouth{ animation: talk .35s steps(2) infinite; }
+  @keyframes talk { 0%{ transform: scaleY(1)} 50%{ transform: scaleY(.4)} 100%{ transform: scaleY(1)} }
+  .robot.think .antenna-dot{ animation: blink .6s infinite alternate; }
+  @keyframes blink { from{opacity:.3} to{opacity:1} }
+  .robot.happy{ animation: bounce .6s ease-in-out 2; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px) rotate(-3deg)} }
+
+  .robot-name{ font-weight:900; letter-spacing:.05em; font-size:14px; color:var(--neon-cyan); }
+  .robot-quote{
+    font-size:12px; color:var(--text-dim); text-align:center; line-height:1.5;
+    min-height: 2.4em;
+  }
+  .badge-row{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center;}
+  .badge{
+    font-size:11px; padding:4px 8px; border-radius:999px;
+    background:#0e1633; border:1px solid var(--line); color:var(--text-dim);
+  }
+  .badge.on{ color:#0a0f25; background:linear-gradient(135deg,var(--neon-yellow),#ff9ad1); border-color:transparent; font-weight:700;}
+
+  /* メインカード */
+  .main{
+    border:1px solid var(--line); border-radius:20px;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    display:flex; flex-direction:column;
+    min-height: 420px;
+  }
+  .panel{ display:none; padding:14px; }
+  .panel.active{ display:flex; flex-direction:column; gap:10px; min-height:420px;}
+
+  /* チャット */
+  .chat{
+    flex:1; overflow-y:auto; padding:14px;
+    background: linear-gradient(180deg, transparent, #0a0f2566);
+    border-radius:14px; border:1px dashed #27325a55;
+    min-height: 520px; max-height: 72vh;
+  }
+  @media (max-width:680px){ .chat{ min-height: 56vh; max-height: 68vh; } }
+  .msg{ display:flex; gap:12px; margin:14px 4px; align-items:flex-end; animation: pop .25s ease; }
+  @keyframes pop { from{ opacity:0; transform: translateY(6px)} to{opacity:1; transform:none}}
+  .msg.user{ flex-direction: row-reverse; }
+  .avatar{
+    width:40px; height:40px; border-radius:50%;
+    background: radial-gradient(circle at 30% 30%, #fff8, transparent 60%), linear-gradient(135deg,var(--neon-cyan),var(--neon-violet));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 4px 12px #00e5ff44; flex-shrink:0;
+    font-size:20px;
+  }
+  .msg.user .avatar{ background: linear-gradient(135deg,#ff5cc8,#ffe16a); box-shadow:0 4px 12px #ff5cc844;}
+  .bubble{
+    max-width: 82%;
+    padding:12px 16px; border-radius:18px;
+    background:#13204a; border:1px solid #27325a;
+    line-height:1.75; font-size:15.5px;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .msg.user .bubble{
+    background: linear-gradient(135deg,#ff5cc822,#ffe16a22);
+    border-color:#ff5cc855;
+  }
+  .bubble b{ color:var(--neon-cyan); }
+  .bubble .hl{ color: var(--neon-yellow); font-weight:700; }
+  .bubble .ng{ color: var(--ng); font-weight:700;}
+  .bubble .ok{ color: var(--ok); font-weight:700;}
+  .bubble code{
+    background:#0a0f25; border:1px solid #27325a; padding:2px 6px; border-radius:6px;
+    color: var(--neon-yellow); font-size:13px;
+  }
+
+  /* 入力 */
+  .composer{
+    display:flex; gap:8px; padding-top:6px;
+  }
+  .composer input{
+    flex:1; padding:12px 14px; border-radius:14px;
+    background:#0e1633; border:1px solid var(--line); color:var(--text);
+    font-size:15px; outline:none;
+  }
+  .composer input:focus{ border-color: var(--neon-cyan); box-shadow:0 0 0 3px #00e5ff33;}
+  .btn{
+    appearance:none; border:none; cursor:pointer;
+    padding:12px 16px; border-radius:14px; font-weight:800;
+    background: linear-gradient(135deg, var(--neon-cyan), var(--neon-violet));
+    color:#0a0f25;
+    box-shadow: 0 8px 18px #00e5ff44;
+    transition: transform .12s ease, box-shadow .2s ease;
+  }
+  .btn:hover{ transform: translateY(-1px);}
+  .btn:active{ transform: translateY(1px);}
+  .btn.ghost{
+    background:#0e1633; color:var(--text); border:1px solid var(--line);
+    box-shadow:none;
+  }
+  .btn.pink{ background: linear-gradient(135deg, var(--neon-pink), var(--neon-yellow)); color:#1a0d20;}
+  .btn.sm{ padding:8px 12px; font-size:13px; border-radius:10px; }
+
+  .quick{
+    display:flex; gap:6px; flex-wrap:wrap;
+  }
+  .chip{
+    font-size:12px; padding:6px 10px; border-radius:999px;
+    background:#0e1633; border:1px solid var(--line); color:var(--text-dim);
+    cursor:pointer; user-select:none;
+  }
+  .chip:hover{ color:var(--text); border-color: var(--neon-cyan);}
+
+  /* クイズ */
+  .quiz-header{
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+  }
+  .topic-select{
+    display:flex; gap:6px; flex-wrap:wrap;
+  }
+  .topic{
+    padding:8px 12px; border-radius:999px; font-size:13px; cursor:pointer;
+    background:#0e1633; border:1px solid var(--line); color:var(--text);
+  }
+  .topic.active{
+    background: linear-gradient(135deg, var(--neon-pink), var(--neon-violet));
+    color:#fff; border-color:transparent; box-shadow:0 6px 16px #ff5cc844;
+  }
+  .timer-wrap{
+    margin-left:auto; display:flex; align-items:center; gap:10px;
+  }
+  .timer-ring{
+    width:54px; height:54px; position:relative;
+  }
+  .timer-ring svg{ width:100%; height:100%; transform: rotate(-90deg); }
+  .timer-ring .bg{ stroke:#27325a; }
+  .timer-ring .fg{ stroke: var(--neon-cyan); transition: stroke-dashoffset 1s linear, stroke .3s; }
+  .timer-ring.warn .fg{ stroke: var(--neon-yellow); }
+  .timer-ring.danger .fg{ stroke: var(--ng); animation: pulse 1s infinite;}
+  @keyframes pulse { 50%{ filter: drop-shadow(0 0 6px var(--ng));}}
+  .timer-num{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-weight:900; font-size:18px; color:#fff;
+  }
+  .score-pill{
+    padding:6px 12px; border-radius:999px;
+    background:#0e1633; border:1px solid var(--line);
+    font-size:13px;
+  }
+  .score-pill b{ color: var(--neon-yellow); }
+
+  .qcard{
+    border:1px solid var(--line); border-radius:16px;
+    background: linear-gradient(180deg,#0e1633,#0b1129);
+    padding:16px; display:flex; flex-direction:column; gap:12px;
+  }
+  .qno{ color:var(--text-dim); font-size:12px;}
+  .qtext{ font-size:18px; line-height:1.6; font-weight:700;}
+  .qjp{ color: var(--text-dim); font-size:13px; line-height:1.6;}
+  .opts{ display:grid; grid-template-columns: 1fr 1fr; gap:8px; }
+  @media (max-width:520px){ .opts{ grid-template-columns: 1fr; }}
+  .opt{
+    text-align:left; cursor:pointer;
+    background:#0a1230; border:1px solid var(--line); border-radius:12px;
+    padding:12px 14px; font-size:15px; color:var(--text);
+    transition: transform .12s, border-color .2s, background .2s;
+  }
+  .opt:hover{ transform: translateY(-1px); border-color: var(--neon-cyan); }
+  .opt.correct{ background: linear-gradient(135deg,#0fae6a55,#0a1230); border-color: var(--ok); }
+  .opt.wrong{ background: linear-gradient(135deg,#ff6b6b55,#0a1230); border-color: var(--ng);}
+  .opt.disabled{ pointer-events:none; opacity:.85; }
+
+  .explain{
+    border:1px dashed var(--line); border-radius:12px; padding:12px;
+    background:#0a1230cc; line-height:1.7; font-size:14px;
+  }
+  .explain h4{ margin:0 0 6px; color: var(--neon-cyan);}
+  .explain .key{ color: var(--neon-yellow); font-weight:700; }
+  .explain code{
+    background:#0a0f25; border:1px solid #27325a; padding:2px 6px; border-radius:6px;
+    color: var(--neon-cyan); font-size:13px;
+  }
+
+  .quiz-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  .progress{
+    height:6px; background:#0e1633; border-radius:999px; overflow:hidden; border:1px solid var(--line);
+  }
+  .progress > div{
+    height:100%; width:0%;
+    background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink), var(--neon-yellow));
+    transition: width .3s;
+  }
+
+  /* 結果モーダル */
+  .modal-bg{
+    position:fixed; inset:0; background:#0008; display:none;
+    align-items:center; justify-content:center; padding:16px; z-index:100;
+    backdrop-filter: blur(4px);
+  }
+  .modal-bg.show{ display:flex; }
+  .modal{
+    background: linear-gradient(160deg, #0e1633, #1a1340);
+    border:1px solid var(--line); border-radius:20px; padding:22px; max-width:420px; width:100%;
+    box-shadow: 0 20px 40px #00000088, 0 0 0 1px #00e5ff33;
+    text-align:center; animation: pop .3s ease;
+  }
+  .modal h3{ margin:0 0 6px; font-size:22px;
+    background: linear-gradient(90deg,var(--neon-cyan),var(--neon-pink)); -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .modal .big{ font-size:48px; font-weight:900; margin:8px 0; color:var(--neon-yellow); }
+  .modal .row{ display:flex; gap:8px; justify-content:center; margin-top:12px; flex-wrap:wrap;}
+
+  .footer{
+    margin-top:14px; text-align:center; color:#5b6792; font-size:11px;
+  }
+
+  /* スクロールバー */
+  ::-webkit-scrollbar{ width:8px;}
+  ::-webkit-scrollbar-thumb{ background:#27325a; border-radius:8px;}
+
+  /* タイピングカーソル */
+  .cursor{
+    display:inline-block; width:8px; height:1em; vertical-align:-2px;
+    background: var(--neon-cyan); margin-left:2px;
+    animation: blinkCursor 1s steps(2) infinite;
+  }
+  @keyframes blinkCursor { 50%{ opacity:0;} }
+
+  /* 接続バッジ */
+  .badge.live{ color:#0a0f25; background: linear-gradient(135deg,#4ade80,#00e5ff); border-color:transparent; font-weight:700;}
+  .badge.offline{ color:#0a0f25; background: linear-gradient(135deg,#ff9ad1,#ffe16a); border-color:transparent; font-weight:700;}
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <div>
+        <div class="title">⚡ AIはらだくん × 英文法制覇 ⚡</div>
+        <div class="subtitle">時制・助動詞・仮定法・関係詞・イディオム・会話表現…英文法ぜんぶ <b style="color:#ffe16a">1,583問</b></div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-tab="chat">💬 チャット</button>
+        <button class="tab" data-tab="quiz">🎯 クイズ</button>
+      </div>
+    </div>
+
+    <div class="stage">
+      <!-- ロボット -->
+      <div class="robot-card">
+        <div class="robot" id="robot">
+          <!-- SVG AI Harada-kun -->
+          <svg viewBox="0 0 200 220" aria-hidden="true">
+            <defs>
+              <linearGradient id="body" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0" stop-color="#cfeeff"/>
+                <stop offset=".6" stop-color="#8ad6ff"/>
+                <stop offset="1" stop-color="#5aa8ff"/>
+              </linearGradient>
+              <linearGradient id="visor" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0" stop-color="#0a0f25"/>
+                <stop offset="1" stop-color="#1a2348"/>
+              </linearGradient>
+              <radialGradient id="cheek" cx=".5" cy=".5" r=".5">
+                <stop offset="0" stop-color="#ff8fcf"/>
+                <stop offset="1" stop-color="#ff5cc800"/>
+              </radialGradient>
+            </defs>
+
+            <!-- アンテナ -->
+            <line x1="100" y1="22" x2="100" y2="44" stroke="#9ad8ff" stroke-width="3" stroke-linecap="round"/>
+            <circle class="antenna-dot" cx="100" cy="18" r="6" fill="#00e5ff">
+              <animate attributeName="r" values="5;7;5" dur="1.6s" repeatCount="indefinite"/>
+            </circle>
+
+            <!-- 頭 -->
+            <rect x="38" y="40" rx="28" ry="28" width="124" height="104" fill="url(#body)" stroke="#5aa8ff" stroke-width="2"/>
+            <!-- バイザー -->
+            <rect x="52" y="62" rx="18" ry="18" width="96" height="50" fill="url(#visor)" stroke="#00e5ff" stroke-width="2"/>
+            <!-- 目 -->
+            <g>
+              <circle cx="80" cy="87" r="7" fill="#00e5ff">
+                <animate attributeName="r" values="7;1.5;7;7" dur="4s" keyTimes="0;0.05;0.1;1" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="120" cy="87" r="7" fill="#00e5ff">
+                <animate attributeName="r" values="7;1.5;7;7" dur="4s" keyTimes="0;0.05;0.1;1" repeatCount="indefinite"/>
+              </circle>
+              <circle cx="82" cy="84" r="2" fill="#fff"/>
+              <circle cx="122" cy="84" r="2" fill="#fff"/>
+            </g>
+            <!-- ほっぺ -->
+            <circle cx="60" cy="118" r="10" fill="url(#cheek)"/>
+            <circle cx="140" cy="118" r="10" fill="url(#cheek)"/>
+            <!-- 口 -->
+            <g class="mouth" style="transform-origin:100px 128px">
+              <rect x="86" y="122" width="28" height="10" rx="5" fill="#0a0f25" stroke="#00e5ff"/>
+              <line x1="92" y1="127" x2="108" y2="127" stroke="#00e5ff" stroke-width="2"/>
+            </g>
+
+            <!-- 首 -->
+            <rect x="86" y="144" width="28" height="10" fill="#5aa8ff"/>
+            <!-- 体 -->
+            <rect x="46" y="154" rx="18" ry="18" width="108" height="56" fill="url(#body)" stroke="#5aa8ff" stroke-width="2"/>
+            <!-- 胸ライト -->
+            <circle cx="100" cy="184" r="10" fill="#ff5cc8">
+              <animate attributeName="fill" values="#ff5cc8;#ffe16a;#00e5ff;#ff5cc8" dur="3s" repeatCount="indefinite"/>
+            </circle>
+            <!-- 腕 -->
+            <rect x="28" y="160" rx="8" ry="8" width="18" height="44" fill="#9ad8ff"/>
+            <rect x="154" y="160" rx="8" ry="8" width="18" height="44" fill="#9ad8ff"/>
+          </svg>
+        </div>
+        <div class="robot-name">AI HARADA-KUN</div>
+        <div class="robot-quote" id="quote">よろしくね！英文法ぜんぶ任せて！</div>
+        <div class="badge-row">
+          <span class="badge offline" id="aiBadge">⚡ 接続確認中…</span>
+          <span class="badge on" id="modeBadge">💬 チャット</span>
+        </div>
+      </div>
+
+      <!-- メイン -->
+      <div class="main">
+        <!-- チャットパネル -->
+        <div class="panel active" id="panel-chat">
+          <div class="chat" id="chat"></div>
+          <div class="quick" id="quick">
+            <span class="chip" data-q="現在完了形の使い方を教えて">現在完了形</span>
+            <span class="chip" data-q="仮定法過去と仮定法過去完了の違いは？">仮定法</span>
+            <span class="chip" data-q="関係代名詞と関係副詞の違いは？">関係代名詞 vs 副詞</span>
+            <span class="chip" data-q="不定詞と動名詞の使い分けは？">不定詞 vs 動名詞</span>
+            <span class="chip" data-q="分詞構文って何？">分詞構文</span>
+            <span class="chip" data-q="比較級と最上級の作り方は？">比較</span>
+            <span class="chip" data-q="助動詞 must と have to の違いは？">助動詞</span>
+            <span class="chip" data-q="問題を出して">🎯 ランダム出題</span>
+          </div>
+          <div class="composer">
+            <input id="input" type="text" placeholder="AIはらだくんに英文法ぜんぶ聞いてOK！（例：53問の問題を出して / 関係詞のクイズ）" />
+            <button class="btn ghost sm" id="clearChat" title="チャットをクリア">🗑️ クリア</button>
+            <button class="btn" id="send">送信 ▶</button>
+          </div>
+        </div>
+
+        <!-- クイズパネル -->
+        <div class="panel" id="panel-quiz">
+          <div class="quiz-header">
+            <div class="topic-select" id="topics">
+              <button class="topic active" data-topic="mix">🎲 読み込み中…</button>
+            </div>
+            <div class="timer-wrap">
+              <span class="score-pill">スコア <b id="score">0</b>/<span id="total">0</span></span>
+              <div class="timer-ring" id="ring">
+                <svg viewBox="0 0 60 60">
+                  <circle class="bg" cx="30" cy="30" r="26" fill="none" stroke-width="6"/>
+                  <circle class="fg" cx="30" cy="30" r="26" fill="none" stroke-width="6"
+                          stroke-linecap="round"
+                          stroke-dasharray="163.36" stroke-dashoffset="0" id="ringFg"/>
+                </svg>
+                <div class="timer-num" id="timeNum">20</div>
+              </div>
+            </div>
+          </div>
+          <div class="progress"><div id="progressBar"></div></div>
+
+          <div class="qcard" id="qcard">
+            <div class="qno" id="qno">Q.1 / 10</div>
+            <div class="qtext" id="qtext">スタートを押してね！</div>
+            <div class="qjp"   id="qjp"></div>
+            <div class="opts"  id="opts"></div>
+            <div class="explain" id="explain" style="display:none"></div>
+            <div class="quiz-actions">
+              <button class="btn pink" id="startBtn">▶ クイズを開始</button>
+              <button class="btn ghost sm" id="nextBtn" style="display:none">次の問題 ▶</button>
+              <button class="btn ghost sm" id="quitBtn" style="display:none">やめる</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">© AI HARADA-KUN — 英文法、いっしょに制覇しよう！</div>
+  </div>
+
+  <!-- 全1583問データ（script-tagで埋め込み、fetch不要） -->
+  <script src="questions.data.js"></script>
+
+  <!-- 結果モーダル -->
+  <div class="modal-bg" id="modal">
+    <div class="modal">
+      <h3 id="mTitle">🎉 結果発表！</h3>
+      <div class="big" id="mScore">0 / 0</div>
+      <div id="mComment" style="color:var(--text-dim);"></div>
+      <div class="row">
+        <button class="btn pink" id="mAgain">もう一回</button>
+        <button class="btn ghost" id="mClose">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========================================================
+   AI HARADA-KUN  -  Single-page Grammar Bot
+   ========================================================= */
+
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+/* ---------------- Robot animations ---------------- */
+const robot = $('#robot');
+const quoteEl = $('#quote');
+const quotes = {
+  idle:   ['よろしくね！英文法ぜんぶ任せて！','時制も関係詞もイディオムもOK！','クイズで腕試しもいいね！','質問でも問題でもどうぞ！'],
+  think:  ['うーん、考えてるよ…','データ照合中… 🔍','ちょっと待ってね…'],
+  happy:  ['やった！正解だよ！🎉','その調子！','完璧！👍','英文法マスターへの道だね！'],
+  sad:    ['おしい！次がんばろう！','ドンマイ！解説見てね','大丈夫、覚えればOK！']
+};
+function setMood(m){
+  robot.classList.remove('talk','think','happy');
+  if(m==='talk') robot.classList.add('talk');
+  if(m==='think') robot.classList.add('think');
+  if(m==='happy') robot.classList.add('happy');
+  const arr = quotes[m] || quotes.idle;
+  quoteEl.textContent = arr[Math.floor(Math.random()*arr.length)];
+}
+setInterval(()=>{ if(!robot.classList.contains('talk') && !robot.classList.contains('think')) setMood('idle'); }, 7000);
+
+/* ---------------- Tabs ---------------- */
+$$('.tab').forEach(t=>t.addEventListener('click',()=>{
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');
+  const id = t.dataset.tab;
+  $$('.panel').forEach(p=>p.classList.remove('active'));
+  $('#panel-'+id).classList.add('active');
+  $('#modeBadge').textContent = (id==='chat'?'💬 チャット':'🎯 クイズ');
+}));
+
+/* ===========================================================
+   CHAT  - 100% online (Poe API)
+   =========================================================== */
+const chatEl = $('#chat');
+function addMsg(text, who='bot'){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg '+who;
+  wrap.innerHTML = `
+    <div class="avatar">${who==='user'?'🧑':'🤖'}</div>
+    <div class="bubble">${text}</div>`;
+  chatEl.appendChild(wrap);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
+const greet = `こんにちは！僕は <b>AIはらだくん</b> ⚡<br>
+英文法ぜんぶ お答えするよ！<span class="hl">時制・助動詞・仮定法・関係詞・分詞・比較・イディオム・会話表現</span>… なんでもどうぞ。<br><br>
+🎯 <b>超絶英文法問題 1,583問</b> を内蔵！こんなふうに頼んでね：<br>
+• 「<span class="hl">問題を出して</span>」 → ランダム出題（4択／並べかえ／書きかえ）<br>
+• 「<span class="hl">受動態の問題を出して</span>」「<span class="hl">関係詞のクイズ</span>」 → 章名で指定<br>
+• 「<span class="hl">53問の問題を出して</span>」「<span class="hl">問題1234</span>」 → 番号で指定（1〜1596）<br>
+🗑️ チャットをリセットしたい時は右の「クリア」ボタンを押してね。`;
+addMsg(greet);
+
+/* クイズキーワード検出（全25章対応） */
+const TOPIC_KEYWORDS = [
+  { id:'tense',     re:/時制|tense|現在形|過去形|未来|完了形|進行形/ },
+  { id:'passive',   re:/受動態|受け身|passive/ },
+  { id:'modal',     re:/助動詞|modal|must|should|can|may|might/ },
+  { id:'subj',      re:/仮定法|subjunctive/ },
+  { id:'inf',       re:/不定詞|to不定詞|infinitive/ },
+  { id:'gerund',    re:/動名詞|gerund/ },
+  { id:'part',      re:/分詞|participle|分詞構文/ },
+  { id:'relative',  re:/関係(代名)?(副)?詞|relative/ },
+  { id:'conj',      re:/接続詞|conjunction/ },
+  { id:'prep',      re:/前置詞|preposition/ },
+  { id:'comp',      re:/比較|比較級|最上級|comparative/ },
+  { id:'agree',     re:/主述|主語と述語|agreement/ },
+  { id:'q',         re:/疑問|疑問文|question/ },
+  { id:'neg',       re:/否定|negation/ },
+  { id:'order',     re:/語順|省略|強調/ },
+  { id:'speech',    re:/話法|narration/ },
+  { id:'verbusage', re:/動詞.*語法|verb.*usage/ },
+  { id:'nounusage', re:/名詞.*語法|noun.*usage/ },
+  { id:'pronusage', re:/代名詞|pronoun/ },
+  { id:'adjusage',  re:/形容詞|adjective/ },
+  { id:'advusage',  re:/副詞|adverb/ },
+  { id:'idiom',     re:/イディオム|熟語|慣用|idiom/ },
+  { id:'convo',     re:/会話|conversation/ },
+  { id:'vocab',     re:/語彙|単語|vocabulary|ボキャ/ },
+  { id:'struct',    re:/文構造|構造|structure/ },
+];
+function detectQuizTrigger(text){
+  if(!/問題|クイズ|出題|quiz|test/i.test(text)) return null;
+  // 番号指定: 「53問」「53番」「問題53」「Q53」「No.53」など
+  const numMatch = text.match(/(?:問題|Q\.?|No\.?|＃|#)\s*(\d{1,4})|(\d{1,4})\s*(?:問|番)(?!所)/);
+  if(numMatch){
+    const n = parseInt(numMatch[1] || numMatch[2]);
+    if(n >= 1 && n <= 1596) return { specificN: n };
+  }
+  for(const t of TOPIC_KEYWORDS){
+    if(t.re.test(text)) return { topic: t.id };
+  }
+  return { topic: 'mix' };
+}
+
+function switchTabTo(name){
+  $$('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelector(`.tab[data-tab="${name}"]`).classList.add('active');
+  $$('.panel').forEach(p=>p.classList.remove('active'));
+  $('#panel-'+name).classList.add('active');
+  $('#modeBadge').textContent = (name==='chat'?'💬 チャット':'🎯 クイズ');
+}
+
+/* AI接続状態（オンライン専用） */
+let AI_READY = false;
+const aiBadge = $('#aiBadge');
+async function checkHealth(retry=3){
+  try{
+    const r = await fetch('api/health');
+    const j = await r.json();
+    AI_READY = !!j.hasKey;
+    if(AI_READY){
+      aiBadge.className = 'badge live';
+      aiBadge.textContent = `⚡ ${j.bot || 'AI'} オンライン`;
+    } else {
+      aiBadge.className = 'badge offline';
+      aiBadge.textContent = '⚠️ APIキー未設定';
+    }
+  } catch(e){
+    // 静かにリトライ／最終的にバッジを隠す
+    if(retry > 0){ setTimeout(()=>checkHealth(retry-1), 2500); }
+    else { aiBadge.style.display = 'none'; }
+  }
+}
+checkHealth();
+
+/* 会話履歴（直近10件をAIに送る） */
+const history = [];
+
+async function send(){
+  const v = $('#input').value;
+  if(!v.trim()) return;
+  addMsg(v.replace(/</g,'&lt;'), 'user');
+  $('#input').value='';
+  setMood('think');
+
+  // クイズ起動キーワードはフロントで即処理
+  const trig = detectQuizTrigger(v);
+  if(trig){
+    if(trig.specificN){
+      const q = (POOL.mix || []).find(x => x.n === trig.specificN);
+      if(q){
+        setMood('talk');
+        addMsg(`🎯 <b>問題 ${trig.specificN}</b>（${q.chapterName} / ${TYPE_LABEL[q.type]||q.type}）を出題するね！`);
+        switchTabTo('quiz');
+        state.topic = 'mix';
+        startQuiz([q]);
+      } else {
+        setMood('sad');
+        addMsg(`ごめん、問題 <b>${trig.specificN}</b> が見つからない… 😢<br>1〜1596 の範囲で指定してね！`);
+      }
+    } else {
+      setMood('talk');
+      addMsg(`了解！<span class="hl">${labelOf(trig.topic)}</span>のクイズを始めるよ！🎯<br>10問チャレンジ！`);
+      switchTabTo('quiz');
+      selectTopic(trig.topic);
+      startQuiz();
+    }
+    setTimeout(()=>setMood('idle'), 1500);
+    return;
+  }
+
+  history.push({ role:'user', content: v });
+  await streamFromAI();
+}
+
+async function streamFromAI(){
+  const wrap = document.createElement('div');
+  wrap.className = 'msg bot';
+  wrap.innerHTML = `<div class="avatar">🤖</div><div class="bubble"><span class="cursor"></span></div>`;
+  chatEl.appendChild(wrap);
+  const bubble = wrap.querySelector('.bubble');
+  chatEl.scrollTop = chatEl.scrollHeight;
+
+  let acc = '';
+  try{
+    const r = await fetch('api/chat', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ messages: history.slice(-10) })
+    });
+    if(r.status === 503){
+      throw new Error('Poe APIキーがサーバーに設定されていません');
+    }
+    if(!r.ok || !r.body) throw new Error('HTTP ' + r.status);
+
+    setMood('talk');
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = ''; let done = false;
+    while(!done){
+      const { done: d, value } = await reader.read();
+      if(d) break;
+      buf += decoder.decode(value, { stream:true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop() ?? '';
+      for(const block of parts){
+        const line = block.trim();
+        if(!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if(data === '[DONE]'){ done = true; break; }
+        try{
+          const j = JSON.parse(data);
+          if(j.delta){
+            acc += j.delta;
+            bubble.innerHTML = acc + '<span class="cursor"></span>';
+            chatEl.scrollTop = chatEl.scrollHeight;
+          } else if(j.error){ throw new Error(j.error); }
+        } catch(e){ /* ignore parse */ }
+      }
+    }
+    if(!acc) throw new Error('AIから空の応答が返ってきた');
+    bubble.innerHTML = acc;
+    history.push({ role:'assistant', content: acc.replace(/<[^>]+>/g,'') });
+    setTimeout(()=>setMood('idle'), 1500);
+  } catch(err){
+    setMood('sad');
+    bubble.innerHTML = `<i style="color:#ff6b6b;">⚠️ AIに繋がらないよ…</i><br>
+<span style="font-size:13px;color:var(--text-dim);">${escapeHTML(String(err))}</span><br><br>
+<b>確認ポイント：</b><br>
+• Renderの環境変数 <code>POE_API_KEY</code> が設定されているか<br>
+• Poe APIキーが有効か（<a href="https://poe.com/api_key" target="_blank" style="color:var(--neon-cyan)">poe.com/api_key</a>）<br>
+• ネットワーク接続`;
+    history.pop(); // 失敗したので履歴に残さない
+    setTimeout(()=>setMood('idle'), 2000);
+  }
+}
+$('#send').addEventListener('click', send);
+$('#input').addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+$('#clearChat').addEventListener('click', ()=>{
+  if(history.length === 0) return;
+  chatEl.innerHTML='';
+  history.length = 0;
+  addMsg(greet);
+  setMood('idle');
+});
+$$('.chip').forEach(c=>c.addEventListener('click',()=>{
+  if(!c.dataset.q) return;
+  $('#input').value = c.dataset.q;
+  send();
+}));
+
+/* ===========================================================
+   QUIZ — built-in starter pool (used if questions.json fails)
+   =========================================================== */
+const STARTER_POOL = {
+  passive: [
+    { q:'The window ____ by Tom yesterday.', jp:'昨日トムによって窓が割られた。',
+      opts:['broke','was broken','is broken','has broken'], a:1,
+      ex:'過去の受動態は <code>was/were + p.p.</code>。yesterday があるので過去形。break の過去分詞は broken。' },
+    { q:'English ____ in many countries.', jp:'英語は多くの国で話されている。',
+      opts:['speaks','spoken','is spoken','was speak'], a:2,
+      ex:'現在の事実・習慣の受動態は <code>is/are + p.p.</code>。speak の過去分詞は spoken。' },
+    { q:'This song ____ by many young people now.', jp:'この歌は今、若者にたくさん歌われている。',
+      opts:['is sung','sings','sang','singing'], a:0,
+      ex:'現在形の受動態 <code>is + p.p.</code>。sing の過去分詞は sung。' },
+    { q:'The letter ____ already.', jp:'手紙はもう書かれた。',
+      opts:['has written','has been written','was been written','is wrote'], a:1,
+      ex:'現在完了の受動態は <code>have/has + been + p.p.</code>。「もう書かれた」は完了用法。' },
+    { q:'The bridge is ____ now.', jp:'橋は今建設中だ。',
+      opts:['being built','been built','build','being build'], a:0,
+      ex:'進行形の受動態は <code>be + being + p.p.</code>。build の過去分詞は built。' },
+    { q:'This computer ____ by anyone.', jp:'このコンピュータは誰でも使える（使われ得る）。',
+      opts:['can use','can used','can be used','be can used'], a:2,
+      ex:'助動詞の受動態は <code>助動詞 + be + p.p.</code>。' },
+    { q:'I ____ a present by my father.', jp:'私は父からプレゼントをもらった。',
+      opts:['was given','gave','given','was give'], a:0,
+      ex:'第4文型 (SVOO) の受動態。人を主語にできる動詞 give の過去分詞は given。' },
+    { q:'He ____ Mike by his friends.', jp:'彼は友達からマイクと呼ばれている。',
+      opts:['is called','calls','called','is calling'], a:0,
+      ex:'SVOC「呼ぶ」の受動態は <code>主語 + be called + C</code>。' },
+    { q:'I was laughed ____ by everyone.', jp:'私はみんなに笑われた。',
+      opts:['/','to','at','on'], a:2,
+      ex:'群動詞 <code>laugh at ~</code> は塊で動かす。前置詞 at を残す！' },
+    { q:'She is interested ____ Japanese culture.', jp:'彼女は日本文化に興味がある。',
+      opts:['by','at','in','on'], a:2,
+      ex:'<code>be interested in ~</code>。by 以外の前置詞をとる受動態は要暗記！' },
+    { q:'The mountain ____ with snow.', jp:'その山は雪で覆われている。',
+      opts:['is covered','covers','covered','is covering'], a:0,
+      ex:'<code>be covered with ~</code>「～で覆われている」。' },
+    { q:'A new school ____ here next year.', jp:'来年ここに新しい学校が建てられる予定だ。',
+      opts:['builds','is built','will be built','will built'], a:2,
+      ex:'未来の受動態は <code>will be + p.p.</code>。' },
+    { q:'The work must ____ by Friday.', jp:'その仕事は金曜までに終わらせなければならない。',
+      opts:['finish','be finished','finished','being finished'], a:1,
+      ex:'助動詞 must + 受動態 → <code>must be + p.p.</code>。' },
+    { q:'Tom ____ in this picture.', jp:'この写真にトムが写っている（見られる）。',
+      opts:['sees','is seen','is seeing','saw'], a:1,
+      ex:'see の受動態 <code>is seen</code>。状態的に「見える/写っている」を表す。' },
+    { q:'These cars ____ in Japan.', jp:'これらの車は日本で作られている。',
+      opts:['make','are made','is made','were make'], a:1,
+      ex:'主語が複数 cars なので <code>are + p.p.</code>。' },
+  ],
+  perfect: [
+    { q:'I ____ him for ten years.', jp:'彼を10年知っている。',
+      opts:['know','have known','knew','am knowing'], a:1,
+      ex:'継続を表す現在完了 <code>have/has + p.p.</code>。for + 期間は完了形の合図。' },
+    { q:'She ____ to Paris three times.', jp:'彼女はパリに3回行ったことがある。',
+      opts:['has been','has gone','went','is going'], a:0,
+      ex:'経験「行ったことがある」は <code>have been to</code>。<code>have gone to</code>は「行ってしまった（今いない）」。' },
+    { q:'They ____ just ____ dinner.', jp:'彼らはちょうど夕食を終えたところだ。',
+      opts:['has / finished','have / finished','have / finishing','had / finish'], a:1,
+      ex:'完了用法 <code>have just + p.p.</code>。主語が複数なので have。' },
+    { q:'I ____ him since last year.', jp:'去年から彼に会っていない。',
+      opts:['don\'t see','haven\'t seen','didn\'t see','wasn\'t seeing'], a:1,
+      ex:'since + 過去の時点は現在完了の合図。否定は <code>haven\'t + p.p.</code>。' },
+    { q:'When I arrived, the train ____ already ____.', jp:'到着した時、電車はもう出ていた。',
+      opts:['has / left','had / left','was / left','have / left'], a:1,
+      ex:'過去のある時点より前 → 過去完了 <code>had + p.p.</code>。' },
+    { q:'How long ____ you ____ Japanese?', jp:'どのくらい日本語を勉強していますか？',
+      opts:['have / studied','do / study','did / study','are / studying'], a:0,
+      ex:'継続期間を尋ねる現在完了。How long have you + p.p. ~ ?' },
+    { q:'This book ____ been read by many students.', jp:'この本は多くの生徒に読まれてきた。',
+      opts:['have','has','was','is'], a:1,
+      ex:'主語 This book は単数 → has been + p.p.（現在完了の受動態）。' },
+    { q:'I ____ never ____ such a beautiful sunset.', jp:'こんな美しい夕日を見たことがない。',
+      opts:['have / seen','has / saw','did / see','am / seeing'], a:0,
+      ex:'経験用法の否定 <code>have never + p.p.</code>。' },
+    { q:'She has lived here ____ 2010.', jp:'彼女は2010年からここに住んでいる。',
+      opts:['for','since','from','at'], a:1,
+      ex:'since + 過去の時点（点）。for + 期間（長さ）と区別。' },
+    { q:'By next year, I ____ here for ten years.', jp:'来年で、私はここに10年住んでいることになる。',
+      opts:['will live','will have lived','have lived','lived'], a:1,
+      ex:'未来完了 <code>will have + p.p.</code>。By + 未来の時点が合図。' },
+  ],
+  relative: [
+    { q:'The boy ____ is running over there is my brother.', jp:'向こうを走っている男の子は僕の弟だ。',
+      opts:['which','who','whose','where'], a:1,
+      ex:'先行詞が「人 (boy)」で主格 → <code>who</code>。' },
+    { q:'This is the book ____ I bought yesterday.', jp:'これは昨日買った本だ。',
+      opts:['who','whose','which','where'], a:2,
+      ex:'先行詞が「物 (book)」で目的格 → <code>which</code> (or that)。省略も可。' },
+    { q:'I know a girl ____ father is a doctor.', jp:'お父さんが医者の女の子を知っている。',
+      opts:['who','whose','which','whom'], a:1,
+      ex:'所有格の関係代名詞 <code>whose</code>。後ろに名詞 (father) が続く。' },
+    { q:'This is the town ____ I was born.', jp:'ここは私が生まれた町だ。',
+      opts:['which','that','where','who'], a:2,
+      ex:'場所を表す関係副詞 <code>where</code>。後ろが完全文なら where。' },
+    { q:'I remember the day ____ we first met.', jp:'初めて会った日を覚えている。',
+      opts:['which','where','when','what'], a:2,
+      ex:'時を表す関係副詞 <code>when</code>。' },
+    { q:'Tell me the reason ____ you were late.', jp:'遅刻した理由を教えて。',
+      opts:['why','where','which','what'], a:0,
+      ex:'理由を表す関係副詞 <code>why</code>。先行詞は the reason。' },
+    { q:'____ he said is true.', jp:'彼が言ったことは本当だ。',
+      opts:['Which','That','What','Who'], a:2,
+      ex:'関係代名詞 what = the thing(s) which。先行詞を含む。' },
+    { q:'The man ____ I met yesterday is a teacher.', jp:'昨日会った男性は先生だ。',
+      opts:['whom','which','whose','what'], a:0,
+      ex:'人の目的格 <code>whom</code> (口語では who/that も可)。' },
+    { q:'She has a cat ____ eyes are blue.', jp:'彼女は青い目のネコを飼っている。',
+      opts:['who','which','whose','that'], a:2,
+      ex:'物・動物の所有格も <code>whose</code> を使える。' },
+    { q:'Tokyo, ____ is the capital of Japan, is very big.', jp:'東京は日本の首都で、とても大きい。',
+      opts:['that','which','who','where'], a:1,
+      ex:'非制限用法（コンマあり）では <code>that</code> は使えない。物 → which。' },
+  ],
+};
+STARTER_POOL.mix = [...STARTER_POOL.passive, ...STARTER_POOL.perfect, ...STARTER_POOL.relative];
+
+/* ---- 動的な問題プール（questions.json から読み込み） ---- */
+let POOL = STARTER_POOL;             // 初期は内蔵スタータープール
+let CHAPTERS_META = [
+  { id:'passive', name:'受動態' },
+  { id:'perfect', name:'現在完了' },
+  { id:'relative',name:'関係詞' },
+];
+
+function labelOf(t){
+  if(t==='mix') return 'ミックス';
+  const c = CHAPTERS_META.find(x=>x.id===t);
+  return c ? c.name : t;
+}
+
+function normalizeQ(q){
+  // (　　) を読みやすい (＿＿) に置換（type='mc'のみ）
+  const text = q.type === 'mc'
+    ? q.q.replace(/\(\s*[　\s]+\s*\)/, '<span class="hl">(＿＿)</span>')
+    : escapeHTML(q.q);
+  return {
+    n: q.n,
+    type: q.type,                  // 'mc' | 'reorder' | 'other'
+    section: q.section || '',
+    chapter: q.chapter,
+    chapterName: q.chapterName,
+    text,                          // 表示用
+    raw: q.q,                      // 生テキスト
+    opts: q.opts || null,
+    a: typeof q.a === 'number' ? q.a : null,
+    words: q.words || null,
+    full: q.full || null,
+  };
+}
+
+function applyData(j){
+  const next = {};
+  for(const c of j.chapters) next[c.id] = [];
+  for(const q of j.questions){
+    if(!next[q.chapter]) next[q.chapter] = [];
+    next[q.chapter].push(normalizeQ(q));
+  }
+  next.mix = j.questions.map(normalizeQ);
+  POOL = next;
+  CHAPTERS_META = j.chapters;
+  renderTopics();
+  console.log(`[quiz] loaded ${j.questions.length} questions across ${j.chapters.length} chapters`);
+}
+
+async function loadQuestions(retry=2){
+  // ① まずは script-tag 埋め込み (window.QUESTIONS_DATA) を優先
+  if(window.QUESTIONS_DATA && Array.isArray(window.QUESTIONS_DATA.questions)){
+    applyData(window.QUESTIONS_DATA);
+    return;
+  }
+  // ② fallback: fetch
+  try{
+    const r = await fetch('questions.json', { cache:'no-store' });
+    if(!r.ok) throw new Error('http ' + r.status);
+    applyData(await r.json());
+  } catch(e){
+    console.warn('questions.json load failed:', e);
+    if(retry > 0){
+      setTimeout(()=>loadQuestions(retry-1), 1500);
+      return;
+    }
+    // 最終フォールバック: STARTER_POOL
+    const next = {};
+    for(const k of Object.keys(STARTER_POOL)){
+      next[k] = STARTER_POOL[k].map(o=>({
+        n:0, type:'mc', section:'', chapter:k, chapterName:k,
+        text: o.q, raw:o.q, opts:o.opts, a:o.a, words:null, full:null,
+      }));
+    }
+    POOL = next;
+    renderTopics();
+  }
+}
+
+function escapeHTML(s){
+  return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function renderTopics(){
+  const el = $('#topics');
+  el.innerHTML = '';
+  const items = [];
+  items.push({ id:'mix', label:`🎲 ミックス (${(POOL.mix||[]).length})` });
+  for(const c of CHAPTERS_META){
+    const n = (POOL[c.id]||[]).length;
+    if(n === 0) continue;
+    items.push({ id:c.id, label:`${c.name} (${n})` });
+  }
+  for(const it of items){
+    const b = document.createElement('button');
+    b.className = 'topic' + (it.id===state.topic ? ' active' : '');
+    b.dataset.topic = it.id;
+    b.textContent = it.label;
+    el.appendChild(b);
+  }
+}
+
+let state = {
+  topic:'mix', idx:0, score:0, total:10, deck:[], timer:null, secs:20, running:false, locked:false
+};
+
+// 起動時にJSONを読み込み（失敗してもSTARTER_POOLで動く）
+loadQuestions();
+
+$('#topics').addEventListener('click', e=>{
+  const b = e.target.closest('.topic'); if(!b) return;
+  selectTopic(b.dataset.topic);
+});
+function selectTopic(t){
+  // POOL に無いトピックは mix にフォールバック
+  if(!POOL[t] || POOL[t].length === 0) t = 'mix';
+  state.topic = t;
+  $$('.topic').forEach(x=>x.classList.toggle('active', x.dataset.topic===t));
+}
+
+function shuffle(arr){ return arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]); }
+
+function startQuiz(customDeck = null){
+  let deck;
+  if(Array.isArray(customDeck) && customDeck.length > 0){
+    deck = customDeck;
+  } else {
+    const src = POOL[state.topic] || POOL.mix || [];
+    if(src.length === 0){ alert('問題プールが空です。少し待ってからもう一度お試しください。'); return; }
+    deck = shuffle(src.slice()).slice(0, Math.min(10, src.length));
+  }
+  state.deck = deck;
+  state.total = deck.length;
+  state.idx = 0; state.score = 0;
+  $('#total').textContent = state.total;
+  $('#score').textContent = 0;
+  $('#startBtn').style.display='none';
+  $('#quitBtn').style.display='inline-block';
+  showQuestion();
+}
+$('#startBtn').addEventListener('click', startQuiz);
+$('#nextBtn').addEventListener('click', ()=>{
+  state.idx++;
+  if(state.idx >= state.total){ finish(); return; }
+  showQuestion();
+});
+$('#quitBtn').addEventListener('click', ()=>{
+  stopTimer(); finish(true);
+});
+
+/* ---- 出題タイプ別の表示 ---- */
+const TYPE_LABEL = { mc:'4択', reorder:'並べかえ', other:'記述' };
+const TYPE_TIME  = { mc:20, reorder:60, other:40 };
+
+function showQuestion(){
+  state.locked = false;
+  state.assembled = [];   // 並べかえ用
+  const q = state.deck[state.idx];
+  const typeBadge = `<span class="badge on" style="margin-left:8px;font-size:11px;">${TYPE_LABEL[q.type]||q.type}</span>`;
+  $('#qno').innerHTML = `Q.${state.idx+1} / ${state.total}  ・  ${q.chapterName || labelOf(state.topic)}${typeBadge}`;
+  $('#qtext').innerHTML = q.text;
+  $('#qjp').textContent = '';
+
+  const opts = $('#opts');
+  opts.innerHTML='';
+  opts.style.display = '';
+
+  if(q.type === 'mc'){
+    opts.style.gridTemplateColumns = '1fr 1fr';
+    q.opts.forEach((o,i)=>{
+      const b = document.createElement('button');
+      b.className='opt';
+      b.innerHTML = `<b style="color:var(--neon-cyan)">${String.fromCharCode(65+i)}.</b>  ${escapeHTML(o)}`;
+      b.addEventListener('click', ()=>choose(i));
+      opts.appendChild(b);
+    });
+  } else if(q.type === 'reorder'){
+    opts.style.gridTemplateColumns = '1fr';
+    opts.innerHTML = `
+      <div id="reorderAns" class="opt" style="min-height:54px; cursor:default; background:#0e1633;
+        border-style:dashed; display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <i style="color:var(--text-dim); font-size:13px;">↓ クリックで並べかえ ↓</i>
+      </div>
+      <div id="reorderBank" style="display:flex; gap:6px; flex-wrap:wrap; padding:8px 0;"></div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn" id="reorderSubmit">📤 答え合わせ</button>
+        <button class="btn ghost sm" id="reorderClear">クリア</button>
+        <button class="btn ghost sm" id="reorderGiveUp">分からない（答えを見る）</button>
+      </div>`;
+    const bank = $('#reorderBank');
+    const shuffled = shuffle(q.words.slice());
+    shuffled.forEach((w,i)=>{
+      const c = document.createElement('button');
+      c.className='chip';
+      c.style.fontSize='14px'; c.style.padding='8px 12px';
+      c.dataset.idx = i;
+      c.textContent = w;
+      c.addEventListener('click', ()=>pickWord(c, w));
+      bank.appendChild(c);
+    });
+    $('#reorderSubmit').addEventListener('click', ()=>submitReorder(q));
+    $('#reorderClear').addEventListener('click', ()=>clearReorder(q));
+    $('#reorderGiveUp').addEventListener('click', ()=>revealReorder(q));
+  } else {
+    // other 自由記述
+    opts.style.gridTemplateColumns = '1fr';
+    opts.innerHTML = `
+      <div style="color:var(--text-dim); font-size:13px; margin:4px 0;">
+        💭 頭の中で答えを考えてみよう！自信があったら「答えを見る」を押してね。
+      </div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
+        <button class="btn" id="otherReveal">👀 答えを見る</button>
+      </div>`;
+    $('#otherReveal').addEventListener('click', ()=>revealOther(q));
+  }
+
+  $('#explain').style.display='none';
+  $('#nextBtn').style.display='none';
+  $('#progressBar').style.width = (state.idx/state.total*100)+'%';
+  state.timeLimit = TYPE_TIME[q.type] || 30;
+  startTimer();
+  setMood('think');
+}
+
+/* ---- 並べかえUI ---- */
+function pickWord(chip, word){
+  if(state.locked) return;
+  chip.style.display = 'none';
+  state.assembled.push({ word, chip });
+  renderAssembled();
+}
+function unpickWord(idx){
+  if(state.locked) return;
+  const item = state.assembled[idx];
+  if(item){ item.chip.style.display=''; }
+  state.assembled.splice(idx,1);
+  renderAssembled();
+}
+function renderAssembled(){
+  const ans = $('#reorderAns');
+  if(!ans) return;
+  if(state.assembled.length === 0){
+    ans.innerHTML = '<i style="color:var(--text-dim); font-size:13px;">↓ クリックで並べかえ ↓</i>';
+    return;
+  }
+  ans.innerHTML = '';
+  state.assembled.forEach((it,i)=>{
+    const b = document.createElement('button');
+    b.className='chip';
+    b.style.cssText='font-size:14px;padding:6px 10px;background:linear-gradient(135deg,var(--neon-cyan),var(--neon-violet));color:#0a0f25;border:none;font-weight:700;';
+    b.textContent = it.word;
+    b.title = 'クリックで取り消し';
+    b.addEventListener('click', ()=>unpickWord(i));
+    ans.appendChild(b);
+  });
+}
+function clearReorder(q){
+  state.assembled.forEach(it => it.chip.style.display='');
+  state.assembled = [];
+  renderAssembled();
+}
+function submitReorder(q){
+  if(state.locked) return;
+  if(state.assembled.length !== q.words.length){
+    alert(`まだ ${q.words.length - state.assembled.length} 個 残ってるよ！`);
+    return;
+  }
+  state.locked = true;
+  stopTimer();
+  const userOrder = state.assembled.map(it=>it.word.toLowerCase().replace(/[.,!?]/g,''));
+  // 正解の語順を q.full から抽出（包含チェック：q.full内で全wordsの順序が一致するか）
+  const fullNorm = (q.full || '').toLowerCase().replace(/[.,!?]/g,'').split(/\s+/);
+  let correct = false;
+  if(q.full){
+    // q.full の中で words の順序を探す
+    let pos = 0;
+    let ok = true;
+    for(const w of userOrder){
+      const idx = fullNorm.indexOf(w, pos);
+      if(idx < 0){ ok = false; break; }
+      pos = idx + 1;
+    }
+    correct = ok;
+  }
+  finishReorder(q, correct);
+}
+function revealReorder(q){
+  if(state.locked) return;
+  state.locked = true;
+  stopTimer();
+  finishReorder(q, false, true);
+}
+function finishReorder(q, correct, gaveUp=false){
+  if(correct){ state.score++; setMood('happy'); }
+  else { setMood('sad'); }
+  $('#score').textContent = state.score;
+  const head = gaveUp ? '👀 答え表示' : (correct ? '⭕ 正解！' : '❌ 不正解');
+  showExplain(q, head);
+  $('#progressBar').style.width = ((state.idx+1)/state.total*100)+'%';
+}
+
+/* ---- 自由記述UI ---- */
+function revealOther(q){
+  if(state.locked) return;
+  state.locked = true;
+  stopTimer();
+  setMood('talk');
+  showExplain(q, '👀 答え表示', { selfGrade:true });
+  $('#progressBar').style.width = ((state.idx+1)/state.total*100)+'%';
+}
+
+function choose(i){
+  if(state.locked) return;
+  state.locked = true;
+  stopTimer();
+  const q = state.deck[state.idx];
+  const buttons = $$('#opts .opt');
+  buttons.forEach((b,j)=>{
+    b.classList.add('disabled');
+    if(j===q.a) b.classList.add('correct');
+    if(j===i && j!==q.a) b.classList.add('wrong');
+  });
+  const correct = (i===q.a);
+  if(correct){ state.score++; setMood('happy'); }
+  else { setMood('sad'); }
+  $('#score').textContent = state.score;
+
+  showExplain(q, correct ? '⭕ 正解！' : '❌ 不正解');
+  $('#progressBar').style.width = ((state.idx+1)/state.total*100)+'%';
+}
+
+/* AIに解説をストリーミング（自動実行・キャッシュ付き） */
+async function aiExplain(q){
+  const box = $('#aiExplain');
+  const retryBtn = $('#aiRetryBtn');
+  if(!box) return;
+
+  // キャッシュ済みなら即表示
+  if(EXPLAIN_CACHE.has(q.n)){
+    box.innerHTML = EXPLAIN_CACHE.get(q.n);
+    if(retryBtn) retryBtn.style.display = 'inline-block';
+    return;
+  }
+
+  if(!AI_READY){
+    box.innerHTML = `<i style="color:var(--text-dim); font-size:13px;">⚠️ Poe API未接続のため自動解説は表示できません。Render環境変数 <code>POE_API_KEY</code> を設定してください。</i>`;
+    return;
+  }
+
+  box.innerHTML = `<span class="cursor"></span>`;
+
+  // 全訳＋解説＋ポイントを必須とする統一プロンプト
+  let userMsg;
+  const common = `必ず以下の3パートに分けて日本語で解説してください。HTMLタグ <b>太字</b> / <code>英文</code> / <br> 改行 を使い、5〜10行程度に簡潔に。
+【ジャンル】${q.chapterName}`;
+
+  if(q.type === 'mc'){
+    userMsg = `${common}
+【問題文】${q.raw}
+【選択肢】${q.opts.map((o,i)=>String.fromCharCode(65+i)+'. '+o).join(' / ')}
+【正解】${String.fromCharCode(65+q.a)}. ${q.opts[q.a]}${q.full ? '\n【正解英文】'+q.full : ''}
+
+①【全訳】完成英文の日本語全訳
+②【解説】なぜその答えが正解か（文法ポイント・公式・パターン）
+③【ポイント】覚えておくべき重要事項、他の選択肢がダメな理由`;
+  } else if(q.type === 'reorder'){
+    userMsg = `${common}
+【日本語ヒント＋英文】${q.raw}
+【並べかえる語】${q.words.join(' / ')}
+【正解英文】${q.full || '(原本に記載なし - 推測してください)'}
+
+①【全訳】完成英文の日本語訳
+②【解説】なぜこの語順になるのか、文法ポイント
+③【ポイント】並べかえのコツ・ありがちなミス`;
+  } else {
+    userMsg = `${common}
+【問題】${q.raw}
+${q.full ? `【正解情報】${q.full}` : '（正解情報は原本未記載なので推測でお願いします）'}
+
+①【正解と全訳】適切な答え + 日本語訳
+②【解説】文法的になぜそうなるか
+③【ポイント】覚えておくべき重要事項`;
+  }
+
+  let acc = '';
+  try{
+    const r = await fetch('api/chat',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ messages:[{role:'user', content:userMsg}] })
+    });
+    if(r.status === 503) throw new Error('Poe APIキー未設定');
+    if(!r.ok || !r.body) throw new Error('HTTP '+r.status);
+    const reader = r.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = ''; let done = false;
+    while(!done){
+      const { done:d, value } = await reader.read();
+      if(d) break;
+      buf += decoder.decode(value, { stream:true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop() ?? '';
+      for(const block of parts){
+        const line = block.trim();
+        if(!line.startsWith('data:')) continue;
+        const data = line.slice(5).trim();
+        if(data === '[DONE]'){ done = true; break; }
+        try{
+          const j = JSON.parse(data);
+          if(j.delta){
+            acc += j.delta;
+            box.innerHTML = acc + '<span class="cursor"></span>';
+          } else if(j.error){ throw new Error(j.error); }
+        } catch(e){}
+      }
+    }
+    if(!acc) throw new Error('AIから空の応答');
+    box.innerHTML = acc;
+    EXPLAIN_CACHE.set(q.n, acc);
+    if(retryBtn) retryBtn.style.display = 'inline-block';
+  } catch(err){
+    box.innerHTML = `<i style="color:#ff6b6b; font-size:13px;">⚠️ 解説の取得に失敗: ${escapeHTML(String(err))}</i>`;
+    if(retryBtn) retryBtn.style.display = 'inline-block';
+  }
+}
+
+/* timer */
+const ring = $('#ring');
+const ringFg = $('#ringFg');
+const CIRC = 2*Math.PI*26; // ~163.36
+ringFg.setAttribute('stroke-dasharray', CIRC);
+function setRing(sec, max){
+  const off = CIRC * (1 - sec/max);
+  ringFg.style.strokeDashoffset = off;
+  ring.classList.remove('warn','danger');
+  if(sec<=max*0.5 && sec>max*0.25) ring.classList.add('warn');
+  if(sec<=max*0.25) ring.classList.add('danger');
+}
+function startTimer(){
+  stopTimer();
+  const max = state.timeLimit || 20;
+  state.secs = max;
+  $('#timeNum').textContent = max;
+  setRing(max, max);
+  state.timer = setInterval(()=>{
+    state.secs--;
+    $('#timeNum').textContent = state.secs;
+    setRing(state.secs, max);
+    if(state.secs<=0){
+      stopTimer();
+      timeUp();
+    }
+  }, 1000);
+}
+function stopTimer(){ if(state.timer){ clearInterval(state.timer); state.timer=null; } }
+function timeUp(){
+  if(state.locked) return;
+  state.locked = true;
+  const q = state.deck[state.idx];
+  setMood('sad');
+  if(q.type === 'mc'){
+    const buttons = $$('#opts .opt');
+    buttons.forEach((b,j)=>{
+      b.classList.add('disabled');
+      if(j===q.a) b.classList.add('correct');
+    });
+  }
+  showExplain(q, '⏰ タイムアップ！', q.type==='other' ? { selfGrade:true } : {});
+  $('#progressBar').style.width = ((state.idx+1)/state.total*100)+'%';
+}
+
+/* ---- 共通: 解答パネル表示 + AI解説 自動ストリーミング ---- */
+function showExplain(q, head, opts = {}){
+  const ex = $('#explain');
+  let answerLine = '';
+  if(q.type === 'mc'){
+    answerLine = `<div><span class="key">解答：</span> <b style="color:var(--neon-cyan);">${String.fromCharCode(65+q.a)}. ${escapeHTML(q.opts[q.a])}</b></div>`;
+  }
+  const fullLine = q.full
+    ? `<div style="margin-top:6px;"><span class="key">正解英文：</span> <b>${escapeHTML(q.full)}</b></div>`
+    : `<div style="margin-top:6px; color:var(--text-dim); font-size:13px;">※ この問題は原本に正解英文の記載がないため、AI解説で確認してください。</div>`;
+  const wordsLine = q.type === 'reorder'
+    ? `<div style="margin-top:6px; font-size:13px; color:var(--text-dim);">並べかえる語：${q.words.join(' / ')}</div>` : '';
+  const selfGradeUI = opts.selfGrade ? `
+    <div style="margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;">
+      <button class="btn sm" id="selfOK">✅ 合ってた</button>
+      <button class="btn ghost sm" id="selfNG">❌ ちがった</button>
+    </div>` : '';
+
+  ex.innerHTML = `
+    <h4>${head}</h4>
+    ${answerLine}
+    ${fullLine}
+    ${wordsLine}
+    ${selfGradeUI}
+    <div style="margin-top:10px; padding-top:8px; border-top:1px dashed #27325a;">
+      <div style="display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+        <span style="font-weight:700; color:var(--neon-pink);">💡 AIはらだくんの解説（全訳＋ポイント）</span>
+        <button class="btn ghost sm" id="aiRetryBtn" style="margin-left:auto; display:none;">🔁 再生成</button>
+      </div>
+      <div id="aiExplain" style="line-height:1.75; font-size:14.5px;"><span class="cursor"></span></div>
+    </div>`;
+  ex.style.display='block';
+  $('#nextBtn').style.display='inline-block';
+
+  if(opts.selfGrade){
+    $('#selfOK').addEventListener('click', ()=>{ state.score++; $('#score').textContent=state.score; setMood('happy'); $('#selfOK').textContent='✅ 自己採点済'; $('#selfOK').disabled=true; $('#selfNG').disabled=true; });
+    $('#selfNG').addEventListener('click', ()=>{ setMood('sad'); $('#selfNG').textContent='❌ 自己採点済'; $('#selfOK').disabled=true; $('#selfNG').disabled=true; });
+  }
+  $('#aiRetryBtn').addEventListener('click', ()=>{ EXPLAIN_CACHE.delete(q.n); aiExplain(q); });
+
+  // 自動ストリーミング開始
+  aiExplain(q);
+}
+
+/* AI解説のメモリキャッシュ（同セッション内では再呼び出ししない） */
+const EXPLAIN_CACHE = new Map();
+
+/* finish */
+function finish(quit=false){
+  stopTimer();
+  $('#mScore').textContent = `${state.score} / ${state.total}`;
+  const pct = state.total ? Math.round(state.score/state.total*100) : 0;
+  let title = '🎉 結果発表！', comment = '';
+  if(pct===100){ title='🏆 パーフェクト！'; comment='完璧！君は文法マスター！'; setMood('happy'); }
+  else if(pct>=80){ title='✨ ナイス！'; comment='いい感じ！この調子！'; setMood('happy'); }
+  else if(pct>=50){ title='👍 もうひと押し！'; comment='解説を見直してもう一回！'; setMood('idle'); }
+  else { title='💪 復習しよう！'; comment='大丈夫、解説を読めば必ず伸びる！'; setMood('sad'); }
+  if(quit){ title='⏹ クイズ終了'; }
+  $('#mTitle').textContent = title;
+  $('#mComment').textContent = comment + `（正答率 ${pct}%）`;
+  $('#modal').classList.add('show');
+}
+$('#mClose').addEventListener('click', ()=>{
+  $('#modal').classList.remove('show');
+  $('#startBtn').style.display='inline-block';
+  $('#nextBtn').style.display='none';
+  $('#quitBtn').style.display='none';
+  $('#qtext').textContent='もう一度プレイしてみよう！';
+  $('#qjp').textContent='';
+  $('#opts').innerHTML='';
+  $('#explain').style.display='none';
+  $('#progressBar').style.width='0%';
+  $('#qno').textContent='Q.1 / 10';
+});
+$('#mAgain').addEventListener('click', ()=>{
+  $('#modal').classList.remove('show');
+  startQuiz();
+});
+
+/* init mood */
+setMood('idle');
+</script>
+</body>
+</html>

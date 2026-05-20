@@ -1,0 +1,17 @@
+{
+  "name": "ai-harada-kun",
+  "version": "1.0.0",
+  "description": "AIはらだくん × 文法制覇 — Poe API powered grammar tutor chatbot",
+  "type": "module",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
