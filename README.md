@@ -1,5 +1,7 @@
 # ⚡ AIはらだくん × 英文法制覇
 
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/takdayo/ai-harada-kun)
+
 カッコよくてかわいいAIロボット「AIはらだくん」が、**英文法ぜんぶ**をチャットで教えて、**1,583問の3種タイマー付きクイズ**でビシバシ鍛えてくれる超絶アプリ。
 
 - 🤖 **AIチャット**：Poe API（Claude / GPT / Gemini など好きなボット）でストリーミング応答（100%オンライン仕様）
