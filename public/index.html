@@ -1349,8 +1349,8 @@ function showExplain(q, head, opts = {}){
     answerLine = `<div><span class="key">解答：</span> <b style="color:var(--neon-cyan);">${String.fromCharCode(65+q.a)}. ${escapeHTML(q.opts[q.a])}</b></div>`;
   }
   const fullLine = q.full
-    ? `<div style="margin-top:6px;"><span class="key">正解英文：</span> <b>${escapeHTML(q.full)}</b></div>`
-    : `<div style="margin-top:6px; color:var(--text-dim); font-size:13px;">※ この問題は原本に正解英文の記載がないため、AI解説で確認してください。</div>`;
+    ? `<div style="margin-top:6px;"><span class="key">${q.fullSource==='original-partial'?'原本の解答':'正解英文'}：</span> <b>${escapeHTML(q.full)}</b></div>`
+    : `<div style="margin-top:6px; color:var(--text-dim); font-size:13px;">📝 AIはらだくんが正解を生成中…</div>`;
   const wordsLine = q.type === 'reorder'
     ? `<div style="margin-top:6px; font-size:13px; color:var(--text-dim);">並べかえる語：${q.words.join(' / ')}</div>` : '';
   const selfGradeUI = opts.selfGrade ? `

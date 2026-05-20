@@ -63,6 +63,24 @@
 
 > Word原本を更新したら `node parse.mjs` で再生成できます。
 
+### 🔄 正解英文の充実化（任意）
+
+MC問題は `node enrich.mjs` で空所に正解を機械代入して完全な英文を自動生成（1,124問）。
+記述・誤文訂正など286問はAIで生成可能：
+
+```bash
+# Windows
+set POE_API_KEY=your-key & node enrich.mjs --ai
+
+# Mac/Linux
+POE_API_KEY=your-key node enrich.mjs --ai
+
+# テストで50問だけ
+POE_API_KEY=your-key node enrich.mjs --ai --limit 50
+```
+
+実行後に `git add public/questions.* && git commit -m "..." && git push` で反映。
+
 ---
 
 ## 🏃 ローカルで動かす
